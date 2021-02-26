@@ -28,8 +28,10 @@ def decode(apk_path):
         print("Success!")
     except subprocess.CalledProcessError as error:
         print("Something went wrong while decoding " + new_apk_path + "with apktool. Exit code: " + error.returncode)
+    
+    print(os.path.abspath(output_dir))
     return os.path.abspath(output_dir)
 
-#decode("/home/falckoon/cysecProj/samples/eventbot/7F5D728119951839B46895808107B281")
+decode("/home/falckoon/cysecProj/samples/mysterybot/51a9cd06be4b8f4217b0e64d3ac6b1d6")
 
 
