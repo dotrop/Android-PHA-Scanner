@@ -32,6 +32,4 @@ def decode(apk_path):
     print(os.path.abspath(output_dir))
     return os.path.abspath(output_dir)
 
-decode("/home/falckoon/cysecProj/samples/mysterybot/51a9cd06be4b8f4217b0e64d3ac6b1d6")
-
 

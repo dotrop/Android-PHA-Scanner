@@ -27,21 +27,64 @@ def get_accessibility_config_files(path):
     for s in services:
         config_path = s.find("meta-data").get('{%(android)s}resource' % ns)
 
-        print(config_path)
+        #Sanitize config_path
         config_path = config_path.replace('@', '')
-        print(config_path)
 
+        #Add config_path to list of config file paths
         accessibility_config_file_paths.append(os.path.abspath(os.path.join(path, 'res', config_path + ".xml")))
     
-    print(accessibility_config_file_paths)
     return accessibility_config_file_paths
-#get_accessibility_config_files("/home/falckoon/cysecProj/Android-PHA-Scanner/data/output")
 
+#Extract Accessibility Event Types from all accessibility config files
 def extract_accessibility_events(config_file_list):
+    
+    #Dictionary keeping track of the presence of every possible event type constant in all of the apps accessibility config files
+    event_type_dict = {
+        "typeAllMask": False,
+        "typeAnnouncement": False,
+        "typeAssistReadingContext": False,
+        "typeContextClicked": False,
+        "typeGestureDetectionEnd": False,
+        "typeGestureDetectionStart": False,
+        "typeNotificationStateChanged": False,
+        "typeTouchExplorationGestureEnd": False,
+        "typeTouchExplorationGestureStart": False,
+        "typeTouchInteractionEnd": False,
+        "typeTouchInteractionStart": False,
+        "typeViewAccessibilityFocusCleared": False,
+        "typeViewAccessibilityFocused": False,
+        "typeViewClicked": False,
+        "typeViewFocused": False,
+        "typeViewHoverEnter": False,
+        "typeViewHoverExit": False,
+        "typeViewLongClicked": False,
+        "typeViewScrolled": False,
+        "typeViewSelected": False,
+        "typeViewTextChanged": False,
+        "typeViewTextSelectionChanged": False,
+        "typeViewTextTraversedAtMovementGranularity": False,
+        "typeWindowContentChanged": False,
+        "typeWindowStateChanged": False,
+        "typeWindowsChanged": False
+    }
+
+    #go trough all accessibility config files
     for c in config_file_list:
         root = etree.parse(c).getroot()
         ns = root.nsmap
-        event_types = root.get('{%(android)s}accessibilityEventTypes' % ns)
-        print(event_types)
 
-extract_accessibility_events(get_accessibility_config_files("/home/falckoon/cysecProj/Android-PHA-Scanner/data/output"))
+        #get string value of android:accessibilityEventTypes attribute
+        atr_value = root.get('{%(android)s}accessibilityEventTypes' % ns)
+
+        #Sanitize string and set presence in dict to True
+        event_types = atr_value.split('|')
+        for e in event_types:
+            event_type_dict[e] = True
+
+    #if typeAllMask=True, app listens for all accessibility event types. 
+    if(event_type_dict["typeAllMask"]):
+        for k, v in event_type_dict.items():
+            event_type_dict[k] = True
+
+    return event_type_dict
+    
