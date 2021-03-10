@@ -9,6 +9,9 @@ class Error(Exception):
 class NoManifestError(Error):
     pass
 
+class NoEventTypesInMetaData(Error):
+    pass
+
 def get_accessibility_config_files(path):
     
     #Check if AndroidManifest.xml exists
@@ -24,14 +27,22 @@ def get_accessibility_config_files(path):
 
     services = root.xpath("//service[@android:permission='android.permission.BIND_ACCESSIBILITY_SERVICE']", namespaces = ns)
 
+    if not services:
+        print("This app does not use any Accessibility services!")
+        return None
+
     for s in services:
-        config_path = s.find("meta-data").get('{%(android)s}resource' % ns)
+        meta_data = s.find("meta-data")
+        if meta_data is None:
+            continue
+        else:
+            config_path = s.find("meta-data").get('{%(android)s}resource' % ns)
 
-        #Sanitize config_path
-        config_path = config_path.replace('@', '')
+            #Sanitize config_path
+            config_path = config_path.replace('@', '')
 
-        #Add config_path to list of config file paths
-        accessibility_config_file_paths.append(os.path.abspath(os.path.join(path, 'res', config_path + ".xml")))
+            #Add config_path to list of config file paths
+            accessibility_config_file_paths.append(os.path.abspath(os.path.join(path, 'res', config_path + ".xml")))
     
     return accessibility_config_file_paths
 
@@ -74,17 +85,36 @@ def extract_accessibility_events(config_file_list):
         ns = root.nsmap
 
         #get string value of android:accessibilityEventTypes attribute
-        atr_value = root.get('{%(android)s}accessibilityEventTypes' % ns)
+        for k, v in ns.items():
+            try:
+                atr_value = root.get('{{{}}}accessibilityEventTypes'.format(v))
+            except KeyError:
+                atr_value = None
+                continue
+        #atr_value = root.get('{%(android)s}accessibilityEventTypes' % ns)
+        #print('{%(android)s}accessibilityEventTypes' % ns)
 
         #Sanitize string and set presence in dict to True
-        event_types = atr_value.split('|')
-        for e in event_types:
-            event_type_dict[e] = True
+        if atr_value is None:
+            continue
+        else:
+            event_types = atr_value.split('|')
+            for e in event_types:
+                event_type_dict[e] = True
 
     #if typeAllMask=True, app listens for all accessibility event types. 
     if(event_type_dict["typeAllMask"]):
-        for k, v in event_type_dict.items():
+        for k, _ in event_type_dict.items():
             event_type_dict[k] = True
+    
+    listens_for_events = False
+    for _, v in event_type_dict.items():
+        if(v):
+            listens_for_events = True
 
-    return event_type_dict
+    if not listens_for_events:
+        return None
+
+    else:
+        return event_type_dict
     
