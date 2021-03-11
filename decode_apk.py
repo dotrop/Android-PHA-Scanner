@@ -27,9 +27,8 @@ def decode(apk_path):
         subprocess.check_call(["apktool", "d", new_apk_path, "-o", output_dir, "-f"])
         #print("Success!")
     except subprocess.CalledProcessError as error:
-        print("Something went wrong while decoding " + new_apk_path + "with apktool. Exit code: " + error.returncode)
+        print("Something went wrong while decoding " + new_apk_path + " with apktool. Exit code: " + str(error.returncode))
     
-    print(os.path.abspath(output_dir))
     return os.path.abspath(output_dir)
 
 
