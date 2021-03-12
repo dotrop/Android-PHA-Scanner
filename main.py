@@ -41,7 +41,10 @@ def analyze_apk(apk_path, desc:bool = False):
         exit(1)
 
     #print out accessibility service descriptions
-    extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list, desc)
+    if os.path.isfile(strings_xml_path):
+        extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list, desc)
+    else:
+        print("Failed to extract descriptions. Resuming analysis...")
 
 
     #Get dictionary of Event Types the app listens for
@@ -91,7 +94,12 @@ def analyze_directory(dir_path, desc:bool = False):
                 continue
             else:
                 #print out accessibility service descriptions
-                descriptions_list = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list, desc)
+                #print out accessibility service descriptions
+                if os.path.isfile(strings_xml_path):
+                    extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list, desc)
+                else:
+                    print("Failed to extract descriptions. Resuming analysis...")
+
                 event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
                 if event_type_dict is None:
                     print("No AccessibilityEvent types could be extracted from accessibility config files")
