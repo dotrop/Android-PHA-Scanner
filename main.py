@@ -58,7 +58,7 @@ def analyze_apk(apk_path, desc:bool = False):
     print(event_type_dict)
     print("Static analysis done!")
 
-    cleanup(0)
+    cleanup()
 
 def decode_apk(apk_path):
     """This command only decodes a specified apk using apktool, without performing any further analysis"""
