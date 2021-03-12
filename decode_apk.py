@@ -2,6 +2,7 @@
 
 import subprocess
 import os
+from shutil import copy
 
 
 output_dir = os.path.abspath(os.path.join('data', 'output'))
@@ -17,7 +18,7 @@ def decode(apk_path):
 
     #Copy apk to ./data
     print("Copying apk file to " + os.path.join(os.path.curdir,'data') + "...")
-    subprocess.call(["cp", apk_path, os.path.abspath("data")])
+    copy(apk_path, os.path.abspath("data"))
 
     new_apk_path = os.path.join('data', filename)
     

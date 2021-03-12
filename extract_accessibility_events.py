@@ -12,6 +12,7 @@ class NoManifestError(Error):
 class NoEventTypesInMetaData(Error):
     pass
 
+
 def get_accessibility_config_files(path):
     
     #Check if AndroidManifest.xml exists
@@ -91,8 +92,6 @@ def extract_accessibility_events(config_file_list):
             except KeyError:
                 atr_value = None
                 continue
-        #atr_value = root.get('{%(android)s}accessibilityEventTypes' % ns)
-        #print('{%(android)s}accessibilityEventTypes' % ns)
 
         #Sanitize string and set presence in dict to True
         if atr_value is None:
@@ -117,4 +116,53 @@ def extract_accessibility_events(config_file_list):
 
     else:
         return event_type_dict
+
+"""
+    This function extracts and prints out an apps accessibility service description if one is available
+    @return: List of description strings
+"""
+def extract_accessibility_service_descriptions(strings_xml_path, config_file_list, p):
+    
+    strings_root = etree.parse(strings_xml_path).getroot()
+    desc_str_list = []
+    
+    #Iterate over all config files
+    for c in config_file_list:
+        root = etree.parse(c).getroot()
+        ns = root.nsmap
+
+        for k, v in ns.items():     #Iterate over namespace
+            try:
+                desc_str_name = root.get('{{{}}}description'.format(v))
+            except KeyError:
+                continue
+            
+            if desc_str_name is None:
+                continue
+            
+            else:
+                desc_str_name = desc_str_name.replace('@string/', '')       #strip @string/ part of the attributes value
+                desc_list = strings_root.xpath('//string[@name="%s"]' % desc_str_name)  #Find string corresponding string in strings.xml
+                for desc in desc_list:
+                    desc_str_list.append(desc.text)
+    
+    #check if descriptions were extracted
+    if not desc_str_list:
+        print("Failed to extract descriptions...")
+        return None
+    
+    #print descriptions if specified by user
+    elif p:
+        print("--------------------DESCRIPTIONS:--------------------\n\n")
+        for desc in desc_str_list:
+            print(desc)
+            print("\n\n-----------------------------------------------------")
+
+    return desc_str_list
+
+                
+
+        
+            
+        
     
