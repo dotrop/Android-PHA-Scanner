@@ -121,7 +121,7 @@ def extract_accessibility_events(config_file_list):
     This function extracts and prints out an apps accessibility service description if one is available
     @return: List of description strings
 """
-def extract_accessibility_service_descriptions(strings_xml_path, config_file_list, p):
+def extract_accessibility_service_descriptions(strings_xml_path, config_file_list):
     
     strings_root = etree.parse(strings_xml_path).getroot()
     desc_str_list = []
@@ -150,13 +150,6 @@ def extract_accessibility_service_descriptions(strings_xml_path, config_file_lis
     if not desc_str_list:
         print("Failed to extract descriptions...")
         return None
-    
-    #print descriptions if specified by user
-    elif p:
-        print("--------------------DESCRIPTIONS:--------------------\n\n")
-        for desc in desc_str_list:
-            print(desc)
-            print("\n\n-----------------------------------------------------")
 
     return desc_str_list
 

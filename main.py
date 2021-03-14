@@ -2,6 +2,7 @@
 
 import decode_apk as dec
 import extract_accessibility_events as extr
+import nlp_analysis as nlp
 import os
 import subprocess
 import sys
@@ -19,6 +20,17 @@ def setup():
 def cleanup():
     """Clears the data directory"""
     subprocess.call(["rm", "-rf", "data"])
+
+def print_descriptions(original_descriptions, en_descriptions):
+    print("\n-------------------- DESCRIPTIONS: --------------------\n")
+    for d in original_descriptions:
+        print(d)
+        print("\n-------------------------------------------------------\n")
+
+    print("\n------------------- EN Descriptions: ------------------\n")
+    for d in en_descriptions:
+        print(d)
+        print("\n-------------------------------------------------------\n")
 
 def analyze_apk(apk_path, desc:bool = False):
     """Performs analysis of the specified file as long as it is compatible with apktool input formats"""
@@ -40,11 +52,17 @@ def analyze_apk(apk_path, desc:bool = False):
         cleanup()
         exit(1)
 
-    #print out accessibility service descriptions
-    if os.path.isfile(strings_xml_path):
-        extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list, desc)
-    else:
+    #Extract Accessibility Service descriptions
+    if not os.path.isfile(strings_xml_path):
         print("Failed to extract descriptions. Resuming analysis...")
+    else:
+        original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
+        
+        if original_descriptions is not None:
+            en_descriptions = nlp.translate_descriptions(original_descriptions)
+            #print descriptions if specified by user
+            if desc:
+                print_descriptions(original_descriptions, en_descriptions)
 
 
     #Get dictionary of Event Types the app listens for
@@ -73,6 +91,7 @@ def analyze_directory(dir_path, desc:bool = False):
     setup()
 
     for filename in os.listdir(dir_path):
+        
         #For now only supports .apk files
         if not filename.endswith(".apk"):
             continue
@@ -93,13 +112,22 @@ def analyze_directory(dir_path, desc:bool = False):
                 print("No accessibility config files found!")
                 continue
             else:
-                #print out accessibility service descriptions
-                #print out accessibility service descriptions
-                if os.path.isfile(strings_xml_path):
-                    extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list, desc)
-                else:
+            
+                #Extract Accessibility Service descriptions
+                if not os.path.isfile(strings_xml_path):
                     print("Failed to extract descriptions. Resuming analysis...")
+                else:
+                    original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
+                    
+                    if original_descriptions is not None:
+                        en_descriptions = nlp.translate_descriptions(original_descriptions)
+                        #print descriptions if specified by user
+                        if desc:
+                            print_descriptions(original_descriptions, en_descriptions)
+                    
 
+                
+                #Extract Accessibility Event Types the app listens for
                 event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
                 if event_type_dict is None:
                     print("No AccessibilityEvent types could be extracted from accessibility config files")
