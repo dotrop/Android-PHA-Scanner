@@ -7,7 +7,7 @@ def translate_descriptions(desc_list):
     translator = Translator()
     translation = []
     for desc in desc_list:
-        translation.append(translator.translate(desc, dest='de'))
+        translation.append(translator.translate(desc, dest='en'))
 
     english_descriptions = [t.text for t in translation]
     return english_descriptions

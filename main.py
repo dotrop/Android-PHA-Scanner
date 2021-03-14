@@ -21,6 +21,7 @@ def cleanup():
     """Clears the data directory"""
     subprocess.call(["rm", "-rf", "data"])
 
+#Helper function to "pretty" print accessibility service descriptions
 def print_descriptions(original_descriptions, en_descriptions):
     print("\n-------------------- DESCRIPTIONS: --------------------\n")
     for d in original_descriptions:
