@@ -33,7 +33,37 @@ def print_descriptions(original_descriptions, en_descriptions):
         print(d)
         print("\n-------------------------------------------------------\n")
 
-def analyze_apk(apk_path, desc:bool = False):
+#TODO: Implement helper function for description and action phrase extraction
+def get_action_phrases(accessibility_config_file_list, desc):
+    action_phrases = []  
+
+    #extract description strings
+    original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
+
+    if original_descriptions is not None:
+        #translate descriptions to english
+        en_descriptions = nlp.translate_descriptions(original_descriptions)
+        
+        #extract action phrases using nlp
+        for description in en_descriptions:
+            desc_ap = nlp.extract_action_phrases(description)
+            if(desc_ap):
+                action_phrases = action_phrases + desc_ap
+
+        #print descriptions if specified by user
+        if desc:
+            print_descriptions(original_descriptions, en_descriptions)
+            print(action_phrases)
+    
+    return action_phrases
+
+def decode_apk(apk_path):
+    """This command only decodes a specified apk using apktool, without performing any further analysis"""
+    setup()
+    out = dec.decode(apk_path)
+    print(out)
+
+def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
     """Performs analysis of the specified file as long as it is compatible with apktool input formats"""
     setup()
 
@@ -53,17 +83,11 @@ def analyze_apk(apk_path, desc:bool = False):
         cleanup()
         exit(1)
 
-    #Extract Accessibility Service descriptions
+    #Extract Accessibility Service descriptions and action phrases
     if not os.path.isfile(strings_xml_path):
         print("Failed to extract descriptions. Resuming analysis...")
     else:
-        original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
-        
-        if original_descriptions is not None:
-            en_descriptions = nlp.translate_descriptions(original_descriptions)
-            #print descriptions if specified by user
-            if desc:
-                print_descriptions(original_descriptions, en_descriptions)
+        action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
 
 
     #Get dictionary of Event Types the app listens for
@@ -72,21 +96,16 @@ def analyze_apk(apk_path, desc:bool = False):
         print("No AccessibilityEvent types could be extracted from accessibility config files")
         cleanup()
         exit(2)
-        
+    
     #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
-    print(event_type_dict)
+    if(print_events):
+        print(event_type_dict)
     print("Static analysis done!")
 
     cleanup()
 
-def decode_apk(apk_path):
-    """This command only decodes a specified apk using apktool, without performing any further analysis"""
-    setup()
-    out = dec.decode(apk_path)
-    print(out)
-
 #Similar to analyze_apk. Analyzes all .apk files in a given directory.
-def analyze_directory(dir_path, desc:bool = False):
+def analyze_directory(dir_path, print_desc:bool = False, print_events:bool = False):
     """This command allows for analysis of all .apk files in a specified directory."""
     
     setup()
@@ -113,31 +132,24 @@ def analyze_directory(dir_path, desc:bool = False):
                 print("No accessibility config files found!")
                 continue
             else:
-            
-                #Extract Accessibility Service descriptions
+
+                #Extract Accessibility Service descriptions and action phrases
                 if not os.path.isfile(strings_xml_path):
                     print("Failed to extract descriptions. Resuming analysis...")
                 else:
-                    original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
-                    
-                    if original_descriptions is not None:
-                        en_descriptions = nlp.translate_descriptions(original_descriptions)
-                        #print descriptions if specified by user
-                        if desc:
-                            print_descriptions(original_descriptions, en_descriptions)
-                    
+                    action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
 
-                
                 #Extract Accessibility Event Types the app listens for
                 event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
                 if event_type_dict is None:
                     print("No AccessibilityEvent types could be extracted from accessibility config files")
                     continue
                 else:
-                    print(apk_path + " uses accessibility services and listens for the following events...")
+                    if(print_events):
+                        print(apk_path + " uses accessibility services and listens for the following events...")
 
-                    #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
-                    print(event_type_dict)
+                        #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
+                        print(event_type_dict)
 
     print("Static analysis done!")
 
