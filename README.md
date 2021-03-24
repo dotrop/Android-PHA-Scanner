@@ -4,7 +4,8 @@ Cybersecurity Project: Android PHA Scanner
 # Requirements
 - Python 3.8+ ([link](https://www.python.org/downloads/)) 
 - apktool ([link](https://ibotpeaches.github.io/Apktool/install/))
-- python fire ([link](https://google.github.io/python-fire/guide/))
+- Install required python packages by running `pip install -r requirements.txt`
+- spacy pipeline: `python -m spacy download en_core_web_sm`
 
 # Usage
 In the project directory:
