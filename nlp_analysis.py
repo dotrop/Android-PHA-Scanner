@@ -57,8 +57,8 @@ def get_matches(stemmed_action_phrases, rules):
         return res
     for sap in stemmed_action_phrases:
         for rule in rules:
-            if sap in rule:
-                print('Match!', sap, rule)
+            if rule in sap:
+                #print('Match!', sap, rule)
                 res += 1
     return res
 
@@ -125,9 +125,11 @@ def get_functionality_category(action_phrases):
     #Dictionary containing a matching pattern (list of dictionaries) for each category of functionality
     category_rules = {
         "kill processes" : [],
-        "obtain notifications": [],
-        "provide audio feedback": [],
-        "execute voice commands": [],
+        "obtain notifications": ['catch event', 'obtain notif'],
+        "provide audio feedback": ['provid feedback', 'feedback', 'make sound'],
+        "alternative input": ['voic command', 'control android devic', 'control devic', 'navig screen', 'activ item'],
+        "fill text": ['enter text'],
+        "read screen text": ['read text', 'content']
     }
 
     res = 'uncategorized'
