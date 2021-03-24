@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import decode_apk as dec
-import extract_accessibility_events as extr
+import extract_features_from_xml as extr
 import nlp_analysis as nlp
 import os
 import subprocess
@@ -69,6 +69,7 @@ def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
 
     #Decode apk with apktool
     decoded_apk_path = dec.decode(apk_path)
+    category = 'uncategorized'
 
     #Extract list of accessibility config files
     try:
@@ -85,9 +86,12 @@ def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
 
     #Extract Accessibility Service descriptions and action phrases
     if not os.path.isfile(strings_xml_path):
-        print("Failed to extract descriptions. Resuming analysis...")
+        print("Failed to extract descriptions: No strings.xml found. Resuming analysis...")
     else:
         action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
+        category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
+        
+        print('App was categorized into category: ', category)
 
 
     #Get dictionary of Event Types the app listens for
@@ -138,6 +142,8 @@ def analyze_directory(dir_path, print_desc:bool = False, print_events:bool = Fal
                     print("Failed to extract descriptions. Resuming analysis...")
                 else:
                     action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
+                    category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
+                    print('App was categorized into category: ', category)
 
                 #Extract Accessibility Event Types the app listens for
                 event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)

@@ -4,7 +4,6 @@ import subprocess
 import os
 from shutil import copy
 
-
 output_dir = os.path.abspath(os.path.join('data', 'output'))
 
 def decode(apk_path):
@@ -25,8 +24,7 @@ def decode(apk_path):
     #Decode apk using apktool and put output in ./data/output
     print("Decoding " + os.path.join(os.path.curdir, new_apk_path) + "...")
     try:
-        subprocess.check_call(["apktool", "d", new_apk_path, "-o", output_dir, "-f"])
-        #print("Success!")
+        subprocess.check_call(["apktool", "d", new_apk_path, "-o", output_dir, "-sf"])
     except subprocess.CalledProcessError as error:
         print("Something went wrong while decoding " + new_apk_path + " with apktool. Exit code: " + str(error.returncode))
     

@@ -3,6 +3,9 @@
 from googletrans import Translator
 import spacy
 from spacy import displacy
+from nltk.stem.snowball import SnowballStemmer
+#from nltk.tokenize import word_tokenize
+#from nltk.stem.porter import *
 
 def translate_descriptions(desc_list):
     translator = Translator()
@@ -15,7 +18,6 @@ def translate_descriptions(desc_list):
 
 def extract_action_phrases(description):
     nlp = spacy.load("en_core_web_sm")
-
     doc = nlp(description)
     action_phrases = []
 
@@ -48,6 +50,17 @@ def check_for_negation(node):
         if(child.dep_ == 'neg'):
             return True
     return False
+
+def get_matches(stemmed_action_phrases, rules):
+    res = 0
+    if not rules:
+        return res
+    for sap in stemmed_action_phrases:
+        for rule in rules:
+            if sap in rule:
+                print('Match!', sap, rule)
+                res += 1
+    return res
 
 def get_verb_action_phrases(verb):
     action_phrases = []
@@ -90,6 +103,44 @@ def get_verb_action_phrases(verb):
 
     return action_phrases
 
+#returns list of stemmed action phrases
+def get_stemmed_action_phrases(action_phrases):
+    stemmer = SnowballStemmer(language='english')
+    res = []
+
+    for ap in action_phrases:
+        words = ap.split()
+        stemmed_ap = ''
+        for word in words:
+            stemmed_ap += stemmer.stem(word) + ' '
+        res.append(stemmed_ap.rstrip(' '))
+    
+    return res 
+
+
+#return the functionality category that was inferred from the given set of action phrases
+def get_functionality_category(action_phrases):
+    stemmed_action_phrases = get_stemmed_action_phrases(action_phrases)
+
+    #Dictionary containing a matching pattern (list of dictionaries) for each category of functionality
+    category_rules = {
+        "kill processes" : [],
+        "obtain notifications": [],
+        "provide audio feedback": [],
+        "execute voice commands": [],
+    }
+
+    res = 'uncategorized'
+    max = 0
+
+    for category, rules in category_rules.items():
+        matches = get_matches(stemmed_action_phrases, rules)
+        #print (category, matches)
+        if(matches > max):
+            res = category
+            max = matches
+
+    return res, stemmed_action_phrases
 
 
 
@@ -97,4 +148,8 @@ def get_verb_action_phrases(verb):
         'Network Master uses accessibility service to optimize your device only.' +
         'We will never use it to collect your privacy information. If you receive warnings about privacy, please ignore.')
  """
-extract_action_phrases("When TalkBack is on, it provides spoken feedback so that you can use your device without looking at the screen. This can be helpful for people who are blind or have low vision.\n\nTo navigate using TalkBack:\n• Swipe right or left to move between items\n• Double-tap to activate an item\n• Drag two fingers to scroll\n\nTo turn off TalkBack:\n• Tap the switch. You’ll see a green outline. Double-tap the switch.\n• On the confirmation message, tap OK. Then double-tap OK.")
+#extract_action_phrases("When TalkBack is on, it provides spoken feedback so that you can use your device without looking at the screen. This can be helpful for people who are blind or have low vision.\n\nTo navigate using TalkBack:\n• Swipe right or left to move between items\n• Double-tap to activate an item\n• Drag two fingers to scroll\n\nTo turn off TalkBack:\n• Tap the switch. You’ll see a green outline. Double-tap the switch.\n• On the confirmation message, tap OK. Then double-tap OK.")
+
+#action_phrases = ['helps apps', 'stops apps', 'extends battery life', 'uses accessibility service', 'optimize your device', 'receive warnings', 'ignore warnings', 'stopping applications']
+#action_phrases = ['Turn it on', 'store private information']
+#get_functionality_category(action_phrases)

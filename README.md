@@ -10,7 +10,10 @@ Cybersecurity Project: Android PHA Scanner
 In the project directory:
 `python3 main.py [COMMAND]`
 
-For help, use:
+For to get a list of available commands use:
 `python3 main.py - --help`
+
+For help with individual commands use:
+`python3 main.py [COMMAND] --help`
 
 
