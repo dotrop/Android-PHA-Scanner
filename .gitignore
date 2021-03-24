@@ -130,4 +130,6 @@ dmypy.json
 
 #unnecessary
 /data
+sort_redapps.py
+build_rules.py
 
