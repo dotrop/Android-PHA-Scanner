@@ -153,6 +153,17 @@ def extract_accessibility_service_descriptions(strings_xml_path, config_file_lis
 
     return desc_str_list
 
+def get_package_name(path):
+    #Check if AndroidManifest.xml exists
+    filename = os.path.join(path, "AndroidManifest.xml")
+    if not os.path.exists(filename):
+        raise NoManifestError
+
+    root = etree.parse(filename).getroot()
+    name = root.get('package')
+
+    return name
+
                 
 
         

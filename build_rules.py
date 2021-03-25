@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import fire
+import csv
 
 #set constants
 strings_xml_path = "./data/output/res/values/strings.xml"
@@ -74,27 +75,36 @@ def analyze_directory(dir_path):
         else:
             apk_path = os.path.join(dir_path, filename)     #Set full apk path to currently analyzed .apk file
             decoded_apk_path = dec.decode(apk_path)         #Decode apk
+
+            name = extr.get_package_name(decoded_apk_path)
+
+            new_fn = name + '.apk'        
             
             #extract config files if possible
             try:
                 accessibility_config_file_list = extr.get_accessibility_config_files(decoded_apk_path)
             except extr.NoManifestError:
                 print("No Manifest was found for this apk. Moving to useless folder")
-                os.rename(apk_path, os.path.join(dir_path, 'useless', filename))
+                os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
                 continue
             
             #check if config files were found
             if accessibility_config_file_list is None:
                 print("No accessibility config files found!")
-                os.rename(apk_path, os.path.join(dir_path, 'useless', filename))
+                os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
                 continue
             else:
 
                 #Extract Accessibility Service descriptions and action phrases
                 if not os.path.isfile(strings_xml_path):
                     print("Failed to extract descriptions. Resuming analysis...")
-                    os.rename(apk_path, os.path.join(dir_path, 'useless', filename))
+                    os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
+                    continue
                 else:
+                    with open('samples.csv', 'a') as csv_file:
+                        writer = csv.writer(csv_file)
+                        writer.writerow(name.split())
+
                     action_phrases, od, ed = get_action_phrases(accessibility_config_file_list)
                     category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
                 if(category == 'uncategorized'):
@@ -102,6 +112,7 @@ def analyze_directory(dir_path):
                     print(action_phrases)
                     print(stemmed_action_phrases)
                     print('Could not categorize app\'s functionality')
+                    print(name)
                     inp = input('Enter y to abort:\n')
                     if(inp == 'y'):
                         print('Aborting analysis...\nCleaning up...')
@@ -114,13 +125,14 @@ def analyze_directory(dir_path):
                     print_descriptions(od, ed)
                     print(stemmed_action_phrases)
                     print('App was categorized into category: ', category)
+                    print(name)
                     inp = input('Enter y to abort:\n')
                     if(inp == 'y'):
                         print('Aborting analysis...\nCleaning up...')
                         cleanup()
                         exit(0)
-                    os.rename(apk_path, os.path.join(dir_path, 'successful', filename))
-    
+                    os.rename(apk_path, os.path.join(dir_path, 'successful', new_fn))
+    subprocess.call(['sort', '-u', 'samples.csv', '-o', 'samples.csv'])
     print('Done!')
 
     #clean directory
