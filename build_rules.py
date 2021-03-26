@@ -8,6 +8,7 @@ import subprocess
 import sys
 import fire
 import csv
+from termcolor import colored
 
 #set constants
 strings_xml_path = "./data/output/res/values/strings.xml"
@@ -111,7 +112,7 @@ def analyze_directory(dir_path):
                     print_descriptions(od, ed)
                     print(action_phrases)
                     print(stemmed_action_phrases)
-                    print('Could not categorize app\'s functionality')
+                    print(colored('Could not categorize app\'s functionality', 'yellow'))
                     print(name)
                     inp = input('Enter y to abort:\n')
                     if(inp == 'y'):
@@ -124,7 +125,7 @@ def analyze_directory(dir_path):
                 else:
                     print_descriptions(od, ed)
                     print(stemmed_action_phrases)
-                    print('App was categorized into category: ', category)
+                    print(colored(('App was categorized into category: ' + category),'green'))
                     print(name)
                     inp = input('Enter y to abort:\n')
                     if(inp == 'y'):
