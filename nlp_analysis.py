@@ -35,11 +35,11 @@ def extract_action_phrases(description):
 
         #check if current token is a verb
         if(token.pos_ == 'VERB'):
-
+            #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
             #check for negation, if verb is negated, ignore it and add all other verbs in sentence that depend on negated verb to ignore_tokens
             if(check_for_negation(token)):
                 for child in token.children:
-                    if(child.pos_ == 'VERB' and child.dep_ in new_clause_dep):
+                    if(child.pos_ == 'VERB'):
                         ignore_tokens.add(child)
                 continue
 
@@ -74,10 +74,12 @@ def get_verb_action_phrases(verb, ignore_tokens):
     queue.append(verb)
     visited.add(verb)
 
-    new_clause_dep = ['conj', 'xcomp']
+    new_clause_dep = ['conj', 'xcomp', 'advcl']
     
     #Perform BFS
-    while queue:
+    done = False
+
+    while queue and not done:
         node = queue.pop(0)
 
         if(node in ignore_tokens):
@@ -87,7 +89,7 @@ def get_verb_action_phrases(verb, ignore_tokens):
             continue
         
         #objects after next VERB node will not have a relationship to current verb
-        if(node.pos_ == 'VERB' and not(verb == node) and (node.dep_ in new_clause_dep)):
+        if(node.pos_ == 'VERB' and verb != node and node.dep_ != 'advcl'):
             continue
         
         #check if node is a direct object
@@ -102,11 +104,11 @@ def get_verb_action_phrases(verb, ignore_tokens):
                     break
             if not compound_found:
                 action_phrases.append(verb.text + ' ' + node.text)
+            done = True
         
         #check if child node is adverbial clause
-        elif(node.dep_ == 'advcl'):
+        elif(node.dep_ == 'advcl' and node != verb):
             subj_found = False
-            ignore_tokens.add(node)
 
             #Find passive subject
             for pot_subj in node.children:
@@ -116,6 +118,7 @@ def get_verb_action_phrases(verb, ignore_tokens):
                     break
             if not subj_found:
                 action_phrases.append(verb.text + ' ' + node.text)
+            done = True
 
         #update visited and queue
         for child in node.children:
@@ -146,15 +149,16 @@ def get_functionality_category(action_phrases):
 
     #Dictionary containing a matching pattern (list of dictionaries) for each category of functionality
     category_rules = {
-        "kill processes" : [],
+        "kill processes" : ['stop app', 'extend batteri life', 'estimate batteri life', 'block app', 'boost phone', 'speed phone'],
         "obtain notifications": ['catch event', 'obtain notif', 'detect notif', 'receiv respons', 'receiv app switch'],
         "provide audio feedback": ['provid feedback', 'feedback', 'make sound'],
         "control device": ['voic command', 'control android devic', 'control devic', 'navig screen', 'activ item', 'perform gestur','perform user action', 'emul user action', 'simul mous function', 'lock screen', 'brows screen', 'block oper', 'intercept search'],
-        "read screen content": ['read text', 'content', 'retriev window content', 'monitor screen app'],
-        "modify screen content": ['enter text', 'draw', 'hide app', 'hide overlay app'],
+        "read screen content": ['read text', 'read content', 'retriev window content', 'monitor screen app', 'scan page', 'access page'],
+        "modify screen content": ['enter text', 'draw', 'hide app', 'hide overlay app', 'enabl screen app', 'convert text', 'dictionari', 'translat page content'],
         "auto perform actions": ['perform action', 'open power', 'open notif', 'perform system function', 'perform home', 'disabl hardwar', 'prevent touch', 'pull notif panel', 'start action', 'start task',],
         "detect foreground app": ['monitor amount', 'devic history', 'catch front', 'monitor app', 'monitor switch'],
-        "detect user actions" : ['observ action', 'receiv action', 'detect touch event', 'detect button press']
+        "detect user actions" : ['observ action', 'receiv action', 'detect touch event', 'detect button press'],
+        "security": ['protect privaci', 'check links', 'protect you', 'lock apps', 'protect app', 'protect web brows', 'scan page', 'warn you']
     }
 
     res = 'uncategorized'

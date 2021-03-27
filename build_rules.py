@@ -75,9 +75,14 @@ def analyze_directory(dir_path):
 
         else:
             apk_path = os.path.join(dir_path, filename)     #Set full apk path to currently analyzed .apk file
-            decoded_apk_path = dec.decode(apk_path)         #Decode apk
+            decoded_apk_path = dec.decode(apk_path)         #Decode apk 
 
-            name = extr.get_package_name(decoded_apk_path)
+            try:
+                name = extr.get_package_name(decoded_apk_path)
+            except extr.NoManifestError:
+                print("No Manifest was found for this apk. Moving to useless folder")
+                os.rename(apk_path, os.path.join(dir_path, 'useless', filename))
+                continue
 
             new_fn = name + '.apk'        
             
