@@ -74,7 +74,7 @@ def get_verb_action_phrases(verb, ignore_tokens):
     queue.append(verb)
     visited.add(verb)
 
-    new_clause_dep = ['conj', 'xcomp', 'advcl']
+    new_clause_dep = set(['conj', 'xcomp', 'advcl', 'ccomp', 'pcomp'])
     
     #Perform BFS
     done = False
@@ -89,7 +89,7 @@ def get_verb_action_phrases(verb, ignore_tokens):
             continue
         
         #objects after next VERB node will not have a relationship to current verb
-        if(node.pos_ == 'VERB' and verb != node and node.dep_ != 'advcl'):
+        if(node.pos_ == 'VERB' and verb != node and node.dep_ not in new_clause_dep):
             continue
         
         #check if node is a direct object
@@ -119,6 +119,16 @@ def get_verb_action_phrases(verb, ignore_tokens):
             if not subj_found:
                 action_phrases.append(verb.text + ' ' + node.text)
             done = True
+        
+        elif(node.dep_ == 'prep'):
+            for pot_obj in node.children:
+                if('obj' in pot_obj.dep_):
+                    action_phrases.append(verb.text + ' ' + node.text + ' ' + pot_obj.text)
+            done = True
+        elif(node.dep_ == 'advmod'):
+            action_phrases.append(verb.text + ' ' + node.text)
+            done = True
+
 
         #update visited and queue
         for child in node.children:
@@ -149,16 +159,18 @@ def get_functionality_category(action_phrases):
 
     #Dictionary containing a matching pattern (list of dictionaries) for each category of functionality
     category_rules = {
-        "kill processes" : ['stop app', 'extend batteri life', 'estimate batteri life', 'block app', 'boost phone', 'speed phone'],
-        "obtain notifications": ['catch event', 'obtain notif', 'detect notif', 'receiv respons', 'receiv app switch'],
+        "kill processes" : ['optim devic perform', 'stop app', 'stop function', 'extend batteri life', 'estimate batteri life', 'block app', 'boost phone', 'speed phone', 'save power', 'batteri', 'save effect', 'stop background applic', 'stop drain app', 'prevent app', 'boost device'],
+        "obtain notifications": ['catch event', 'obtain notif', 'detect notif', 'receiv respons', 'receiv app switch', 'give notif access'],
         "provide audio feedback": ['provid feedback', 'feedback', 'make sound'],
-        "control device": ['voic command', 'control android devic', 'control devic', 'navig screen', 'activ item', 'perform gestur','perform user action', 'emul user action', 'simul mous function', 'lock screen', 'brows screen', 'block oper', 'intercept search'],
-        "read screen content": ['read text', 'read content', 'retriev window content', 'monitor screen app', 'scan page', 'access page'],
-        "modify screen content": ['enter text', 'draw', 'hide app', 'hide overlay app', 'enabl screen app', 'convert text', 'dictionari', 'translat page content'],
-        "auto perform actions": ['perform action', 'open power', 'open notif', 'perform system function', 'perform home', 'disabl hardwar', 'prevent touch', 'pull notif panel', 'start action', 'start task',],
+        "capture audio": ['captur speech', 'process convers', 'voic command', 'intercept search'],
+        "assist operating device": ['voic command', 'control android devic', 'control devic', 'navig screen', 'activ item', 'perform gestur','perform user action', 'emul user action', 'simul mous function', 'lock screen', 'brows screen', 'block oper', 'intercept search', 'hold smatphon', 'prevent oper', 'help someon', 'copi text content',  'disabl hardwar', 'prevent touch', 'prevent oper', 'enabl interfac', 'block touch'],
+        "read screen content": ['read text', 'read content', 'retriev window content', 'monitor screen app', 'scan page', 'access page', 'copi website address', 'detect screen content', 'read screen content', 'retriev app content', 'select text', 'see text'],
+        "modify screen content": ['fill', 'enter text', 'draw over screen', 'hide app', 'hide overlay app', 'enabl screen app', 'convert text', 'dictionari', 'translat page content', 'autofil', 'display notif'],
+        "auto perform actions": ['go back', 'perform action', 'open power', 'open notif', 'perform system function', 'perform home', 'pull notif panel', 'start action', 'start task', 'turn screen'],
         "detect foreground app": ['monitor amount', 'devic history', 'catch front', 'monitor app', 'monitor switch'],
-        "detect user actions" : ['observ action', 'receiv action', 'detect touch event', 'detect button press'],
-        "security": ['protect privaci', 'check links', 'protect you', 'lock apps', 'protect app', 'protect web brows', 'scan page', 'warn you']
+        "detect user actions" : ['observ action', 'receiv action', 'detect touch event', 'detect button press', 'press overlay button',  'log action', 'monitor action', 'saw ad', 'collect research inform'],
+        "security": ['protect privaci', 'check links', 'protect you', 'lock apps', 'protect app', 'protect web brows', 'scan page', 'warn you'],
+        "auto sign in": ['copi websit address', 'detail rememb', 'sign into app', 'transmit inform', 'autofil', 'fill usernam', 'retriev app content', 'fill login', 'login feature', 'detect you prompt']
     }
 
     res = 'uncategorized'

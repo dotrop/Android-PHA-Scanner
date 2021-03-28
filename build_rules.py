@@ -51,6 +51,9 @@ def get_action_phrases(accessibility_config_file_list):
             desc_ap = nlp.extract_action_phrases(description)
             if(desc_ap):
                 action_phrases = action_phrases + desc_ap
+    else:
+        print('No descriptions could be extracted...')
+        return None, None, None
 
     return action_phrases,original_descriptions, en_descriptions
 
@@ -112,6 +115,9 @@ def analyze_directory(dir_path):
                         writer.writerow(name.split())
 
                     action_phrases, od, ed = get_action_phrases(accessibility_config_file_list)
+                    if(od is None):
+                        os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
+                        continue
                     category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
                 if(category == 'uncategorized'):
                     print_descriptions(od, ed)
