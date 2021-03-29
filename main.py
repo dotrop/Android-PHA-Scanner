@@ -84,24 +84,24 @@ def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
     category = 'uncategorized'
 
     #Extract list of accessibility config files
+    print('[' + colored('*', 'green') + ']', 'Extracting accessibility config files from manifest...')
     try:
-        print(colored('[*] Extracting accessibility config files from manifest...', 'green'))
         accessibility_config_file_list = extr.get_accessibility_config_files(decoded_apk_path)
     except extr.NoManifestError:
         print(colored('[*] No manifest was found for this apk...\n[*] Cleaning up...', 'red'))
         cleanup()
         print(colored('[*] Aborting analysis...', 'red'))
-        exit(1)
+        return 1
 
     if(accessibility_config_file_list is None):
         print(colored('[*] Failed to extract accessibility config files...\n[*] Cleaning up...', 'red'))
         cleanup()
         print(colored('[*] Aborting analysis...', 'red'))
-        exit(1)
+        return 1
 
     if(print_events):
+        print('[' + colored('*', 'green') + ']', ' Extracting accessibility event types the app listens for...')
         #Get dictionary of Event Types the app listens for
-        print(colored('[*] Extracting accessibility events the app is listening for...', 'green'))
         event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
         if(event_type_dict is None):
             print(colored("[*] Failed to extract AccessibilityEvent types from accessibility config files... \n[*] Resuming analysis...", 'red'))
@@ -112,35 +112,33 @@ def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
         print('------------------------------------------------------')
     
     #Extract Accessibility Service descriptions and action phrases
-    print(colored('[*] Analyzing accessibility service descriptions...', 'green'))
+    print('[' + colored('*', 'green') + ']', 'Analyzing accessibility service descriptions...')
     if not os.path.isfile(strings_xml_path):
         print(colored('[*] Failed to locate strings.xml. No further analysis possible...\n[*] Cleaning up...', 'red'))
         cleanup()
         print(colored('[*] Aborting analysis...', 'red'))
-        exit(1)
+        return 1
     else:
         action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
         if(action_phrases is None):
             print(colored('[*] Failed to extract accessibility service description...\n[*] Cleaning up...', 'red'))
             cleanup()
-            exit(2)
+            return 2
         
         category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
 
         if(category != 'uncategorized'):
             print(colored('[*] App provides sufficiently meaningful description of its accessibility services and was placed in the following category: ' + category, 'green'))
         else:
-            print(colored('[*] App doesn\'t provide a meaningful accessibility service description, which may indicate malicious behavior...', 'yellow'))
+            print(colored('[*] The analyzed app doesn\'t provide a meaningful accessibility service description, which is an indicator for misuse of accessibility APIs and even malicious behavior...', 'yellow'))
 
-    print(colored("[*] Analysis done!", 'green'))
+    print('[' + colored('*', 'green') + ']','APK analysis done!')
 
     cleanup()
 
 #Similar to analyze_apk. Analyzes all .apk files in a given directory.
 def analyze_directory(dir_path, print_desc:bool = False, print_events:bool = False):
     """This command allows for analysis of all .apk files in a specified directory."""
-    
-    setup()
 
     for filename in os.listdir(dir_path):
         
@@ -150,43 +148,14 @@ def analyze_directory(dir_path, print_desc:bool = False, print_events:bool = Fal
 
         else:
             apk_path = os.path.join(dir_path, filename)     #Set full apk path to currently analyzed .apk file
-            decoded_apk_path = dec.decode(apk_path)         #Decode apk
-            
-            #Extract list of accessibility config files
-            try:
-                print(colored('[*] Extracting accessibility config files from manifest...', 'green'))
-                accessibility_config_file_list = extr.get_accessibility_config_files(decoded_apk_path)
-            except extr.NoManifestError:
-                print("No Manifest was found for this apk")
-                continue
-            
-            #check if config files were found
-            if accessibility_config_file_list is None:
-                print("No accessibility config files found!")
-                continue
-            else:
+            analyze_apk(apk_path, print_desc, print_events)
+            inp = input('Abort analysis? [Y/n]\n')
+            if(inp == 'Y'):
+                print('[', colored('*', 'yellow'), ']',  'Cleaning up...')
+                cleanup()
+                exit(0)
 
-                #Extract Accessibility Service descriptions and action phrases
-                if not os.path.isfile(strings_xml_path):
-                    print("Failed to extract descriptions. Resuming analysis...")
-                else:
-                    action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
-                    category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
-                    print('App was categorized into category: ', category)
-
-                #Extract Accessibility Event Types the app listens for
-                event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
-                if event_type_dict is None:
-                    print("No AccessibilityEvent types could be extracted from accessibility config files")
-                    continue
-                else:
-                    if(print_events):
-                        print(apk_path + " uses accessibility services and listens for the following events...")
-
-                        #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
-                        print(event_type_dict)
-
-    print("Static analysis done!")
+    print('[' + colored('*', 'green') + ']','Directory analysis done!')
 
     #clean directory
     cleanup()
