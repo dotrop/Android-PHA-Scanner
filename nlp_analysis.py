@@ -159,16 +159,16 @@ def get_functionality_category(action_phrases):
 
     #Dictionary containing a matching pattern (list of dictionaries) for each category of functionality
     category_rules = {
-        "kill processes" : ['optim devic perform', 'stop app', 'stop function', 'extend batteri life', 'estimate batteri life', 'block app', 'boost phone', 'speed phone', 'save power', 'batteri', 'save effect', 'stop background applic', 'stop drain app', 'prevent app', 'boost device'],
+        "kill processes" : ['optim devic perform', 'stop app', 'drain app', 'stop function', 'extend batteri life', 'estimate batteri life', 'block app', 'boost phone', 'speed phone', 'save power', 'batteri', 'save effect', 'stop background applic', 'stop drain app', 'prevent app', 'boost devic', 'get % perform', 'stop killer', 'close app', 'clear cach'],
         "obtain notifications": ['catch event', 'obtain notif', 'detect notif', 'receiv respons', 'receiv app switch', 'give notif access'],
-        "provide audio feedback": ['provid feedback', 'feedback', 'make sound'],
+        "provide audio feedback": ['provid feedback', 'feedback', 'make sound', 'hear aloud', 'read aloud'],
         "capture audio": ['captur speech', 'process convers', 'voic command', 'intercept search'],
-        "assist operating device": ['voic command', 'control android devic', 'control devic', 'navig screen', 'activ item', 'perform gestur','perform user action', 'emul user action', 'simul mous function', 'lock screen', 'brows screen', 'block oper', 'intercept search', 'hold smatphon', 'prevent oper', 'help someon', 'copi text content',  'disabl hardwar', 'prevent touch', 'prevent oper', 'enabl interfac', 'block touch'],
-        "read screen content": ['read text', 'read content', 'retriev window content', 'monitor screen app', 'scan page', 'access page', 'copi website address', 'detect screen content', 'read screen content', 'retriev app content', 'select text', 'see text'],
-        "modify screen content": ['fill', 'enter text', 'draw over screen', 'hide app', 'hide overlay app', 'enabl screen app', 'convert text', 'dictionari', 'translat page content', 'autofil', 'display notif'],
-        "auto perform actions": ['go back', 'perform action', 'open power', 'open notif', 'perform system function', 'perform home', 'pull notif panel', 'start action', 'start task', 'turn screen'],
-        "detect foreground app": ['monitor amount', 'devic history', 'catch front', 'monitor app', 'monitor switch'],
-        "detect user actions" : ['observ action', 'receiv action', 'detect touch event', 'detect button press', 'press overlay button',  'log action', 'monitor action', 'saw ad', 'collect research inform'],
+        "assist operating device": ['voic command', 'control android devic', 'control devic', 'control phon', 'navig screen', 'activ item', 'perform gestur','perform user action', 'emul user action', 'simul mous function', 'lock screen', 'brows screen', 'block oper', 'intercept search', 'hold smatphon', 'prevent oper', 'help someon', 'copi text content',  'disabl hardwar', 'prevent touch', 'prevent oper', 'enabl interfac', 'block touch', 'lock phone', 'take screenshot', 'use switch'],
+        "read screen content": ['read text', 'read content', 'retriev window content', 'monitor screen app','scan screen', 'scan page', 'access page', 'copi website address', 'detect screen content', 'read screen content', 'retriev app content', 'select text', 'see text'],
+        "modify screen content": ['fill', 'enter text', 'draw over screen', 'hide app', 'hide overlay app', 'enabl screen app', 'convert text', 'dictionari', 'translat page content', 'autofil', 'display notif', 'highlight'],
+        "auto perfrm actions": ['back', 'perform action', 'open power', 'open notif', 'perform system function', 'perform home', 'pull notif panel', 'start action', 'start task', 'turn screen', 'autom task', 'show set'],
+        "detect foreground app": ['monitor amount', 'devic history', 'catch front', 'monitor app', 'monitor switch', 'monitor transit', 'find button'],
+        "detect user actions" : ['observ action', 'receiv action', 'detect touch event', 'detect button press', 'press overlay button',  'log action', 'monitor action', 'saw ad', 'collect research inform', 'find button'],
         "security": ['protect privaci', 'check links', 'protect you', 'lock apps', 'protect app', 'protect web brows', 'scan page', 'warn you'],
         "auto sign in": ['copi websit address', 'detail rememb', 'sign into app', 'transmit inform', 'autofil', 'fill usernam', 'retriev app content', 'fill login', 'login feature', 'detect you prompt']
     }
@@ -176,9 +176,9 @@ def get_functionality_category(action_phrases):
     res = 'uncategorized'
     max = 0
 
+    #find category with most matches
     for category, rules in category_rules.items():
         matches = get_matches(stemmed_action_phrases, rules)
-        #print (category, matches)
         if(matches > max):
             res = category
             max = matches

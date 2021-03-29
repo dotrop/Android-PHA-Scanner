@@ -148,7 +148,6 @@ def extract_accessibility_service_descriptions(strings_xml_path, config_file_lis
     
     #check if descriptions were extracted
     if not desc_str_list:
-        print("Failed to extract descriptions...")
         return None
 
     return desc_str_list

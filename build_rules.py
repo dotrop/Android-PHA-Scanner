@@ -35,6 +35,15 @@ def print_descriptions(original_descriptions, en_descriptions):
         print(d)
         print("\n-------------------------------------------------------\n")
 
+def sanitize_desc(descriptions):
+    res = []
+    for desc in descriptions:
+        desc = desc.replace('-', '')
+        desc = desc.replace('*', '')
+        desc = desc.replace('•', '')
+        res.append(desc)
+    return res
+
 #TODO: Implement helper function for description and action phrase extraction
 def get_action_phrases(accessibility_config_file_list):
     action_phrases = []  
@@ -43,8 +52,9 @@ def get_action_phrases(accessibility_config_file_list):
     original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
 
     if original_descriptions is not None:
-        #translate descriptions to english
+        #translate descriptions to english and sanitize
         en_descriptions = nlp.translate_descriptions(original_descriptions)
+        en_descriptions = sanitize_desc(en_descriptions)
         
         #extract action phrases using nlp
         for description in en_descriptions:

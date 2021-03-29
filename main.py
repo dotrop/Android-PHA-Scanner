@@ -7,6 +7,8 @@ import os
 import subprocess
 import sys
 import fire
+import yaml
+from termcolor import colored
 
 #set constants
 strings_xml_path = "./data/output/res/values/strings.xml"
@@ -33,7 +35,15 @@ def print_descriptions(original_descriptions, en_descriptions):
         print(d)
         print("\n-------------------------------------------------------\n")
 
-#TODO: Implement helper function for description and action phrase extraction
+def sanitize_desc(descriptions):
+    res = []
+    for desc in descriptions:
+        desc = desc.replace('-', '')
+        desc = desc.replace('*', '')
+        desc = desc.replace('•', '')
+        res.append(desc)
+    return res
+
 def get_action_phrases(accessibility_config_file_list, desc):
     action_phrases = []  
 
@@ -41,8 +51,8 @@ def get_action_phrases(accessibility_config_file_list, desc):
     original_descriptions = extr.extract_accessibility_service_descriptions(strings_xml_path, accessibility_config_file_list)
 
     if original_descriptions is not None:
-        #translate descriptions to english
-        en_descriptions = nlp.translate_descriptions(original_descriptions)
+        #translate descriptions to english and sanitize
+        en_descriptions = sanitize_desc(nlp.translate_descriptions(original_descriptions))
         
         #extract action phrases using nlp
         for description in en_descriptions:
@@ -53,7 +63,9 @@ def get_action_phrases(accessibility_config_file_list, desc):
         #print descriptions if specified by user
         if desc:
             print_descriptions(original_descriptions, en_descriptions)
-            print(action_phrases)
+            #print(action_phrases)
+    else:
+        return None
     
     return action_phrases
 
@@ -73,38 +85,54 @@ def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
 
     #Extract list of accessibility config files
     try:
+        print(colored('[*] Extracting accessibility config files from manifest...', 'green'))
         accessibility_config_file_list = extr.get_accessibility_config_files(decoded_apk_path)
     except extr.NoManifestError:
-        print("No Manifest was found for this apk")
+        print(colored('[*] No manifest was found for this apk...\n[*] Cleaning up...', 'red'))
         cleanup()
+        print(colored('[*] Aborting analysis...', 'red'))
         exit(1)
 
     if(accessibility_config_file_list is None):
-        print("No accessibility config files found!")
+        print(colored('[*] Failed to extract accessibility config files...\n[*] Cleaning up...', 'red'))
         cleanup()
+        print(colored('[*] Aborting analysis...', 'red'))
         exit(1)
 
+    if(print_events):
+        #Get dictionary of Event Types the app listens for
+        print(colored('[*] Extracting accessibility events the app is listening for...', 'green'))
+        event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
+        if(event_type_dict is None):
+            print(colored("[*] Failed to extract AccessibilityEvent types from accessibility config files... \n[*] Resuming analysis...", 'red'))
+            
+        #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
+        print('-------------------- Event Types: --------------------')
+        print(yaml.dump(event_type_dict, sort_keys=False, default_flow_style=False))
+        print('------------------------------------------------------')
+    
     #Extract Accessibility Service descriptions and action phrases
+    print(colored('[*] Analyzing accessibility service descriptions...', 'green'))
     if not os.path.isfile(strings_xml_path):
-        print("Failed to extract descriptions: No strings.xml found. Resuming analysis...")
+        print(colored('[*] Failed to locate strings.xml. No further analysis possible...\n[*] Cleaning up...', 'red'))
+        cleanup()
+        print(colored('[*] Aborting analysis...', 'red'))
+        exit(1)
     else:
         action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
-        category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
+        if(action_phrases is None):
+            print(colored('[*] Failed to extract accessibility service description...\n[*] Cleaning up...', 'red'))
+            cleanup()
+            exit(2)
         
-        print('App was categorized into category: ', category)
+        category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
 
+        if(category != 'uncategorized'):
+            print(colored('[*] App provides sufficiently meaningful description of its accessibility services and was placed in the following category: ' + category, 'green'))
+        else:
+            print(colored('[*] App doesn\'t provide a meaningful accessibility service description, which may indicate malicious behavior...', 'yellow'))
 
-    #Get dictionary of Event Types the app listens for
-    event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
-    if(event_type_dict is None):
-        print("No AccessibilityEvent types could be extracted from accessibility config files")
-        cleanup()
-        exit(2)
-    
-    #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
-    if(print_events):
-        print(event_type_dict)
-    print("Static analysis done!")
+    print(colored("[*] Analysis done!", 'green'))
 
     cleanup()
 
@@ -124,8 +152,9 @@ def analyze_directory(dir_path, print_desc:bool = False, print_events:bool = Fal
             apk_path = os.path.join(dir_path, filename)     #Set full apk path to currently analyzed .apk file
             decoded_apk_path = dec.decode(apk_path)         #Decode apk
             
-            #extract config files if possible
+            #Extract list of accessibility config files
             try:
+                print(colored('[*] Extracting accessibility config files from manifest...', 'green'))
                 accessibility_config_file_list = extr.get_accessibility_config_files(decoded_apk_path)
             except extr.NoManifestError:
                 print("No Manifest was found for this apk")
