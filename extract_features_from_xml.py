@@ -37,7 +37,7 @@ def get_accessibility_config_files(path):
         if meta_data is None:
             continue
         else:
-            config_path = s.find("meta-data").get('{%(android)s}resource' % ns)
+            config_path = meta_data.get('{%(android)s}resource' % ns)
 
             #Sanitize config_path
             config_path = config_path.replace('@', '')

@@ -108,25 +108,30 @@ def analyze_directory(dir_path):
                 continue
             
             #check if config files were found
-            if accessibility_config_file_list is None:
-                print("No accessibility config files found!")
+            if not accessibility_config_file_list:
+                print("App doesnt use accessibility")
                 os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
+                continue
+
+            if accessibility_config_file_list is None:
+                print('App uses accessibility but no config found')
                 continue
             else:
 
                 #Extract Accessibility Service descriptions and action phrases
                 if not os.path.isfile(strings_xml_path):
-                    print("Failed to extract descriptions. Resuming analysis...")
+                    print("Failed locate strings.xml. Resuming analysis...")
                     os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
                     continue
                 else:
-                    with open('samples.csv', 'a') as csv_file:
+                    with open('malware_samples.csv', 'a') as csv_file:
                         writer = csv.writer(csv_file)
                         writer.writerow(name.split())
 
                     action_phrases, od, ed = get_action_phrases(accessibility_config_file_list)
                     if(od is None):
-                        os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
+                        print("Failed to extract descriptions. Resuming analysis...")
+                        #os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
                         continue
                     category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
                 if(category == 'uncategorized'):

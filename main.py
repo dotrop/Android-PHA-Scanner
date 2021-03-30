@@ -63,7 +63,6 @@ def get_action_phrases(accessibility_config_file_list, desc):
         #print descriptions if specified by user
         if desc:
             print_descriptions(original_descriptions, en_descriptions)
-            #print(action_phrases)
     else:
         return None
     
@@ -87,50 +86,62 @@ def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
     print('[' + colored('*', 'green') + ']', 'Extracting accessibility config files from manifest...')
     try:
         accessibility_config_file_list = extr.get_accessibility_config_files(decoded_apk_path)
-    except extr.NoManifestError:
-        print(colored('[*] No manifest was found for this apk...\n[*] Cleaning up...', 'red'))
+    except extr.NoManifestError:                                                                                            #Manifest.xml not found
+        print(colored('[*] No manifest was found for this apk...', 'red'))
+        print('[' + colored('*', 'yellow') + ']', 'Cleaning up...' )
         cleanup()
         print(colored('[*] Aborting analysis...', 'red'))
         return 1
 
-    if(accessibility_config_file_list is None):
-        print(colored('[*] Failed to extract accessibility config files...\n[*] Cleaning up...', 'red'))
+    if(accessibility_config_file_list is None):                                                                             #App doesn't use accessibility
+        print('[' + colored('*', 'yellow') + ']', 'App does not contain any accessibility services...')
+        print('[' + colored('*', 'yellow') + ']', 'Cleaning up...' )
         cleanup()
-        print(colored('[*] Aborting analysis...', 'red'))
+        print('[' + colored('*', 'yellow') + ']', 'Aborting analysis...')
         return 1
 
-    if(print_events):
+    if not accessibility_config_file_list:                                                                                  #App uses accessibility but no config files found
+        print(colored('[*] Failed to extract accessibility config files...', 'red'))
+        print('[' + colored('*', 'yellow') + ']', 'Cleaning up...' )
+        cleanup()
+        print('[' + colored('*', 'yellow') + ']', 'Aborting analysis...')
+        return 1
+
+    if(print_events):                                                                                                       #analyze xml file for accessibility event types if specified by the user
         print('[' + colored('*', 'green') + ']', ' Extracting accessibility event types the app listens for...')
-        #Get dictionary of Event Types the app listens for
         event_type_dict = extr.extract_accessibility_events(accessibility_config_file_list)
-        if(event_type_dict is None):
-            print(colored("[*] Failed to extract AccessibilityEvent types from accessibility config files... \n[*] Resuming analysis...", 'red'))
+        if(event_type_dict is None):                                                                                        #No events extracted, continue with description analysis
+            print(colored("[*] Failed to extract AccessibilityEvent types from accessibility config files...", 'red'))
+            print('[' + colored('*', 'yellow') + ']', 'Resuming analysis...')
             
-        #Placeholder. Results will be used in 2nd Phase to guide dynamic analysis
+        #Pretty print event type dictionary
         print('-------------------- Event Types: --------------------')
         print(yaml.dump(event_type_dict, sort_keys=False, default_flow_style=False))
         print('------------------------------------------------------')
     
     #Extract Accessibility Service descriptions and action phrases
     print('[' + colored('*', 'green') + ']', 'Analyzing accessibility service descriptions...')
-    if not os.path.isfile(strings_xml_path):
-        print(colored('[*] Failed to locate strings.xml. No further analysis possible...\n[*] Cleaning up...', 'red'))
+
+    if not os.path.isfile(strings_xml_path):                                                                                 #try to locate strings.xml
+        print(colored('[*] Failed to locate strings.xml. No further analysis possible...', 'red'))
+        print('[' + colored('*', 'yellow') + ']', 'Cleaning up...' )
         cleanup()
-        print(colored('[*] Aborting analysis...', 'red'))
+        print('[' + colored('*', 'yellow') + ']', 'Aborting analysis...')
         return 1
     else:
         action_phrases = get_action_phrases(accessibility_config_file_list, print_desc)
-        if(action_phrases is None):
-            print(colored('[*] Failed to extract accessibility service description...\n[*] Cleaning up...', 'red'))
+        if action_phrases is None:
+            print(colored('[*] The analyzed app uses accessibility services, but doesn\'t provide a meaningful accessibility service description, which can be an indicator for misuse of accessibility APIs and even malicious behavior...', 'yellow'))
             cleanup()
             return 2
         
         category, stemmed_action_phrases = nlp.get_functionality_category(action_phrases)
 
+        #output analysis result depending on inferred category
         if(category != 'uncategorized'):
             print(colored('[*] App provides sufficiently meaningful description of its accessibility services and was placed in the following category: ' + category, 'green'))
         else:
-            print(colored('[*] The analyzed app doesn\'t provide a meaningful accessibility service description, which is an indicator for misuse of accessibility APIs and even malicious behavior...', 'yellow'))
+            print(colored('[*] The analyzed app uses accessibility services, but doesn\'t provide a meaningful accessibility service description, which can be an indicator for misuse of accessibility APIs and even malicious behavior...', 'yellow'))
 
     print('[' + colored('*', 'green') + ']','APK analysis done!')
 
@@ -151,7 +162,7 @@ def analyze_directory(dir_path, print_desc:bool = False, print_events:bool = Fal
             analyze_apk(apk_path, print_desc, print_events)
             inp = input('Abort analysis? [Y/n]\n')
             if(inp == 'Y'):
-                print('[', colored('*', 'yellow'), ']',  'Cleaning up...')
+                print('[' + colored('*', 'yellow') + ']',  'Cleaning up...')
                 cleanup()
                 exit(0)
 

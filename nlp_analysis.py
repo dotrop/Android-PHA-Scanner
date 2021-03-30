@@ -27,15 +27,12 @@ def extract_action_phrases(description):
     #displacy.serve(doc, style='dep')
 
     for token in doc:
-        #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
-
         #check if token is negated, thus to be ignored
         if(token in ignore_tokens):
             continue
 
         #check if current token is a verb
         if(token.pos_ == 'VERB'):
-            #print(token.text, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
             #check for negation, if verb is negated, ignore it and add all other verbs in sentence that depend on negated verb to ignore_tokens
             if(check_for_negation(token)):
                 for child in token.children:
@@ -44,8 +41,7 @@ def extract_action_phrases(description):
                 continue
 
             action_phrases += get_verb_action_phrases(token, ignore_tokens)
-        
-    #print(action_phrases)
+    
     return action_phrases
 
 def check_for_negation(node):
@@ -61,7 +57,6 @@ def get_matches(stemmed_action_phrases, rules):
     for sap in stemmed_action_phrases:
         for rule in rules:
             if rule in sap:
-                #print('Match!', sap, rule)
                 res += 1
     return res
 
@@ -184,15 +179,3 @@ def get_functionality_category(action_phrases):
             max = matches
 
     return res, stemmed_action_phrases
-
-
-
-""" extract_action_phrases('Turn it on will help Network Master stop apps and extend your battery life.' + 
-        'Network Master uses accessibility service to optimize your device only.' +
-        'We will never use it to collect your privacy information. If you receive warnings about privacy, please ignore.')
- """
-#extract_action_phrases("When TalkBack is on, it provides spoken feedback so that you can use your device without looking at the screen. This can be helpful for people who are blind or have low vision.\n\nTo navigate using TalkBack:\n• Swipe right or left to move between items\n• Double-tap to activate an item\n• Drag two fingers to scroll\n\nTo turn off TalkBack:\n• Tap the switch. You’ll see a green outline. Double-tap the switch.\n• On the confirmation message, tap OK. Then double-tap OK.")
-
-#action_phrases = ['helps apps', 'stops apps', 'extends battery life', 'uses accessibility service', 'optimize your device', 'receive warnings', 'ignore warnings', 'stopping applications']
-#action_phrases = ['Turn it on', 'store private information']
-#get_functionality_category(action_phrases)
