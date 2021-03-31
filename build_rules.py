@@ -124,7 +124,7 @@ def analyze_directory(dir_path):
                     os.rename(apk_path, os.path.join(dir_path, 'useless', new_fn))
                     continue
                 else:
-                    with open('malware_samples.csv', 'a') as csv_file:
+                    with open('samples.csv', 'a') as csv_file:
                         writer = csv.writer(csv_file)
                         writer.writerow(name.split())
 
