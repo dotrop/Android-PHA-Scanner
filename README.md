@@ -24,20 +24,25 @@ This project is a potentially harmful app scanner targeting malware leveraging a
 ### How does it work?
 The analysis consists of five main phases:
 1) Decoding of the apk using apktool [[3]](#3). The decoded files are put in the temporary 'data' directory, which will be deleted once analysis is done.
-2) Extraction of accessibility service description (and accessibility event types). If this step fails, analysis will be aborted. If the app is found to make use of accessibility capabilities but no description can be found, we still flag it as potentially harmfull, assuming that simply no description was provided at all.
-3) Part-of-Speech tagging: We use spaCy [[4]](#spacy), a natural language processing framework for python, to tag each word in a sentence with its role (verb, object, adjective, etc...). During this step, spaCy also builds a semantic relationship tree for each description, which is used in the next phase.
-4) Action phrase extraction: Using the results from the previous step, we can now extract action phrases, i.e. verb + object combinations such as "save energy" or "perform gesture" by performing BFS starting from each verb in the description. Note that, similiarly to Diao et al. [[2]](#2), we ignore negated verbs in this step, as the actions will not be taken.
-5) Categorization of the action phrases: Once we obtain a descriptions action phrase, we try to infer the described functionality by matching them against a set of rules for different types of functionalities. To make the matching less restrictive we also use stemmed forms of the action phrases as described in [[2]](#2). The rule sets were built heuristically, meaning that we looked at a large set of benign samples of accessibility services and for each apk, checked if it was correctly categorized. If not, the rules were modified/extended accordingly. The package names of the apps used for building the matching rules can be found in samples.csv. 
+2) Extraction of accessibility service description (and accessibility event types). For this task, several intermediary steps need to be taken: First we look at AndroidManifest.xml and find all accessibility services by checking if they declare the “BIND_ACCESSIBILITY_SERVICE” permission.  Next, we locate the accessibility services’ config files. From those we can learn what accessibility event types the app listens for, as well as the location of the accessibility service description in the strings.xml file. 
+If this step fails, analysis will be aborted. If the app is found to make use of accessibility capabilities but no description can be found, we still flag it as potentially harmfull, assuming that simply no description was provided at all.
+4) Part-of-Speech tagging: We use spaCy [[4]](#spacy), a natural language processing framework for python, to tag each word in a sentence with its role (verb, object, adjective, etc...). During this step, spaCy also builds a semantic relationship tree for each description, which is used in the next phase.
+5) Action phrase extraction: Using the results from the previous step, we can now extract action phrases, i.e. verb + object combinations such as "save energy" or "perform gesture" by performing BFS starting from each verb in the description. Note that, similiarly to Diao et al. [[2]](#2), we ignore negated verbs in this step, as the actions will not be taken.
+6) Categorization of the action phrases: Once we obtain a descriptions action phrase, we try to infer the described functionality by matching them against a set of rules for different types of functionalities. To make the matching less restrictive we also use stemmed forms of the action phrases as described in [[2]](#2). The rule sets were built heuristically, meaning that we looked at a large set of benign samples of accessibility services and for each apk, checked if it was correctly categorized. If not, the rules were modified/extended accordingly. The package names of the apps used for building the matching rules can be found in samples.csv. 
 This process of building "good" rule sets is about deciding which stemmed action phrases should be adopted as rules for a given category, while trying to keep the size of each category's ruleset to a minimum, to avoid mismatching and increased runtime of the scanner.
 
 If an app's functionality can not be categorized based on the description, it is flagged as potentially harmful.
 
 ### Structure
 In this section we want to give an overview of the code's structure and highlight some points that might not be clear from looking at the in-code documentation:
-- main.py:
-- decode_apk.py:
-- extract_features_from_xml.py:
-- nlp_analysis.py:
+- main.py: This script connects functionalities provided by the other scripts, but also to manage user interaction via the python Fire CLI. The analyze_apk function can be considered the main function of the program, as it contains the entire analysis loop. The analyze_directory function provides the same functionality as analyze_apk, just for an entire directory. Both can be executed via the CLI.
+- decode_apk.py: This script provides all the functionality necessary to decode an apk with apktool. It does so by simply calling apktool as a subprocess and interacting with it as a user would do on the commandline.
+- extract_features_from_xml.py: This script comprises all the functions that are used to extract various features from the decoded xml files contained in the apk file. More specifically, those features are: 
+  - accessibility config files: those contain information the event accessibility event types the app listens for as well as the location of the accessibility service’s description.
+  - Accessibility event types the app listens for
+  - Accessibility service descriptions
+  - Package name
+- nlp_analysis.py: This script contains all the functions that revolve around processing the service descriptions, extracting action phrases and inferring the apps functionality from said action phrases.
 - build_rules.py: This script basically does the same as running a directory analysis with the main.py script. The only difference is that it always prints descriptions, action phrases etc. and automatically moves apk files to different subdirectories depending on the scanning result. Its only purpose was used to make the process of building matching rules more efficient. Although it is not part of the scanner itself, we still decided to include it here, as it played a major role in the development process.
 
 ## Process Report
