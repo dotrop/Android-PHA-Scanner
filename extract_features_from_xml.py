@@ -24,6 +24,7 @@ def get_accessibility_config_files(path):
     
     ns = root.nsmap
 
+    #find all services with the BIND_ACCESSIBILITY_SERVICE permission
     services = root.xpath("//service[@android:permission='android.permission.BIND_ACCESSIBILITY_SERVICE']", namespaces = ns)
 
     # check if the app even uses accessibility services
