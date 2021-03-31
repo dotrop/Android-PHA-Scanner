@@ -18,8 +18,6 @@ For help with individual commands use:
 `python3 main.py [COMMAND] --help`
 
 ## Project description
-In this section we give a general overview of the project, followed by an explanation of the scanner's functionality. We also cover the codes structure, describing each individual scripts functionality and role for the scanner.
-
 ### Overview
 This project is a potentially harmful app scanner targeting malware leveraging android accessibility services as described in [[1]](#1). The approach is based on a technique described by Diao et al. in 'Kindness is a Risky Business: On the usage of accessibility APIs in Android' section IV.3 [[2]](#2). Android apps that provide accessibility services are supposed to provide a human readable description for every such service, explaining what the accessibility capabilities are used for. The method for identifying potentially harmful apps relies on the fact that benign apps have no reason to provide a vague/fake description. Malicious apps however tend to provide very little helpful information in these descriptions as to what the accessibility capabilities are being used for, if they provide a description at all. Under this assumption, we flag an app as potentially harmful if it uses accessibility capabilities but fails to provide a sufficiently meaningful description of its services.
 
@@ -35,20 +33,14 @@ This process of building "good" rule sets is about deciding which stemmed action
 If an app's functionality can not be categorized based on the description, it is flagged as potentially harmful.
 
 ### Structure
-In this section we want to give an overview of the code's structure and highlight some points that might not be clear from looking at the in-code documentation:
-- main.py:
-- decode_apk.py:
-- extract_features_from_xml.py:
-- nlp_analysis.py:
-- build_rules.py: This script basically does the same as running a directory analysis with the main.py script. The only difference is that it always prints descriptions, action phrases etc. and automatically moves apk files to different subdirectories depending on the scanning result. Its only purpose was used to make the process of building matching rules more efficient. Although it is not part of the scanner itself, we still decided to include it here, as it played a major role in the development process.
+//TODO: explain structure of the code, which script handles what; complicated functions etc...
 
 ## Process Report
-// TODO: explain the working process:
-- Describe task
-- initial solution (static + dynamic analysis) and why we decided against this approach
-- final solution: intention, how we found it etc...
-- building the program: framework -> rulebuilding -> testing
-- Results: true negative/false positive rate on sampleset
+To make it understandable how we came to the result, we want to explain our working process:
+The task was to develop a PHA scanner for Android. Our initial approach was to use first static analysis to get an indication which apps could be malware by means of the code and afterwards use dynamic analysis to check the behaviour of the program at runtime. While being concerned with tools for static and dynamic analysis, we decided against this approach.
+By reading lots of papers we found the final solution: The accessibility service description can be a hint on the malice of an app because malware often has a defective description. With Natural Language Processing (NLP) we can analyse this description and make a point about the app.
+Then we started building the program: We began with the framework thus implemented functions that decode the apk and extract the relevant information from the apk. We defined the matching rules next and optimized these on and on. Finally, we tested our scanneer on a set of malware samples.
+// TODO: Results: true negative/false positive rate on sampleset
 
 ## Limitations
 Of course, this approach has certain limitations, which we wanted to address here:
