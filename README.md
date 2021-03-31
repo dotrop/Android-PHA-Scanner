@@ -42,9 +42,10 @@ In this section we want to give an overview of the code's structure and highligh
 
 ## Process Report
 To make it understandable how we came to the result, we want to explain our working process:
-The task was to develop a PHA scanner for Android. Our initial approach was to use first static analysis to get an indication which apps could be malware by means of the code and afterwards use dynamic analysis to check the behaviour of the program at runtime. While being concerned with tools for static and dynamic analysis, we decided against this approach.
+The task was to develop a PHA scanner for Android. Our initial approach was to use first static analysis to get an indication which apps could be malware by means of the code and afterwards use dynamic analysis to check the behaviour of the program at runtime. However, we decided against this approach because we didn't make a find in quest of tools for static and dynamic analysis. Furthermore, it would have been difficult to implement an entire dynamic analysis in the remaining time.
 By reading lots of papers we found the final solution: The accessibility service description can be a hint on the malice of an app because malware often has a defective description. With Natural Language Processing (NLP) we can analyse this description and make a point about the app.
 Then we started building the program: We began with the framework thus implemented functions that decode the apk and extract the relevant information from the apk. We defined the matching rules next and optimized these on and on. Finally, we tested our scanneer on a set of malware samples.
+
 // TODO: Results: true negative/false positive rate on sampleset
 
 ## Limitations
