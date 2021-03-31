@@ -18,6 +18,8 @@ For help with individual commands use:
 `python3 main.py [COMMAND] --help`
 
 ## Project description
+In this section we give a general overview of the project, followed by an explanation of the scanner's functionality. We also cover the codes structure, describing each individual scripts functionality and role for the scanner.
+
 ### Overview
 This project is a potentially harmful app scanner targeting malware leveraging android accessibility services as described in [[1]](#1). The approach is based on a technique described by Diao et al. in 'Kindness is a Risky Business: On the usage of accessibility APIs in Android' section IV.3 [[2]](#2). Android apps that provide accessibility services are supposed to provide a human readable description for every such service, explaining what the accessibility capabilities are used for. The method for identifying potentially harmful apps relies on the fact that benign apps have no reason to provide a vague/fake description. Malicious apps however tend to provide very little helpful information in these descriptions as to what the accessibility capabilities are being used for, if they provide a description at all. Under this assumption, we flag an app as potentially harmful if it uses accessibility capabilities but fails to provide a sufficiently meaningful description of its services.
 
