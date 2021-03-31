@@ -61,8 +61,7 @@ Of course, this approach has certain limitations, which we wanted to address her
 - Finally, one could argue that malware authors can easily circumvent this method of scanning by providing a meaningful accessibility service description. As this is indeed a valid concern, we would like to briefly discuss this issue in the following section.
 
 ## Interpretation and (proposed) Future Work
-// TODO: make it match new report structure
-Finally, one could argue that malware authors can easily circumvent this method of scanning by providing a meaningful accessibility service description. In this case, it is reasonable to assume, that, while being meaningful in the sense of containing enough information to infer what functionality the app claims to have, the provided description will most likely still be fake, i.e. not describe what the app actually uses accessibility capabilities for. 
+In the case of a malware with a apparently meaningful description, it is reasonable to assume, that, while being meaningful in the sense of containing enough information to infer what functionality the app claims to have, the provided description will most likely still be fake, i.e. not describe what the app actually uses accessibility capabilities for. 
 While the scanner, in its current state, will not flag the app as potentially harmful, we can see it being extended with a module that allows it to check if the app's actual behavior matches what is claimed in the accessibility service description. Some form of dynamic analysis will probably be best suited for this task. The scanner already includes the functionality necessary for extracting which accessibility event types the app listens for. This knowledge could prove useful for such an extention, as accessibility events are commonly used by malware as triggers for their payload [[1]](#1).
 
 ## References
