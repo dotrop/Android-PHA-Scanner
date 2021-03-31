@@ -33,7 +33,12 @@ This process of building "good" rule sets is about deciding which stemmed action
 If an app's functionality can not be categorized based on the description, it is flagged as potentially harmful.
 
 ### Structure
-//TODO: explain structure of the code, which script handles what; complicated functions etc...
+In this section we want to give an overview of the code's structure and highlight some points that might not be clear from looking at the in-code documentation:
+- main.py:
+- decode_apk.py:
+- extract_features_from_xml.py:
+- nlp_analysis.py:
+- build_rules.py: This script basically does the same as running a directory analysis with the main.py script. The only difference is that it always prints descriptions, action phrases etc. and automatically moves apk files to different subdirectories depending on the scanning result. Its only purpose was used to make the process of building matching rules more efficient. Although it is not part of the scanner itself, we still decided to include it here, as it played a major role in the development process.
 
 ## Process Report
 To make it understandable how we came to the result, we want to explain our working process:
