@@ -6,6 +6,8 @@ from shutil import copy
 
 output_dir = os.path.abspath(os.path.join('data', 'output'))
 
+# This function decode the specified apk file using apktool and puts a copy of the apk aswell as the
+# decoded version in the temporary working directory 'data'
 def decode(apk_path):
     
     #extract filename

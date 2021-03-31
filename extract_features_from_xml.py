@@ -9,13 +9,11 @@ class Error(Exception):
 class NoManifestError(Error):
     pass
 
-class NoEventTypesInMetaData(Error):
-    pass
-
-
+# This function handles extraction of the accessibility config files from AndroidManifest.xml
+# @return: list of paths to accessibility config files
 def get_accessibility_config_files(path):
     
-    #Check if AndroidManifest.xml exists
+    # Check if AndroidManifest.xml exists
     filename = os.path.join(path, "AndroidManifest.xml")
     if not os.path.exists(filename):
         raise NoManifestError
@@ -28,10 +26,12 @@ def get_accessibility_config_files(path):
 
     services = root.xpath("//service[@android:permission='android.permission.BIND_ACCESSIBILITY_SERVICE']", namespaces = ns)
 
+    # check if the app even uses accessibility services
     if not services:
         print("This app does not use any Accessibility services!")
         return None
 
+    # retrieve the location of the accessibility service config file
     for s in services:
         meta_data = s.find("meta-data")
         if meta_data is None:
@@ -47,7 +47,8 @@ def get_accessibility_config_files(path):
     
     return accessibility_config_file_paths
 
-#Extract Accessibility Event Types from all accessibility config files
+# This function extracts which event types the app listens for from the accessibility config files
+# @return: dictionary where for each event type the value is either True or False, depending on whether the app listen for the event or not
 def extract_accessibility_events(config_file_list):
     
     #Dictionary keeping track of the presence of every possible event type constant in all of the apps accessibility config files
@@ -152,6 +153,7 @@ def extract_accessibility_service_descriptions(strings_xml_path, config_file_lis
 
     return desc_str_list
 
+# This function retrieves the package name from Androidmanifest.xml
 def get_package_name(path):
     #Check if AndroidManifest.xml exists
     filename = os.path.join(path, "AndroidManifest.xml")

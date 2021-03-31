@@ -4,9 +4,9 @@ from googletrans import Translator
 import spacy
 from spacy import displacy
 from nltk.stem.snowball import SnowballStemmer
-#from nltk.tokenize import word_tokenize
-#from nltk.stem.porter import *
 
+# This function handles translation of a list of descriptions
+# @return: list of english descriptions
 def translate_descriptions(desc_list):
     translator = Translator()
     translation = []
@@ -16,6 +16,8 @@ def translate_descriptions(desc_list):
     english_descriptions = [t.text for t in translation]
     return english_descriptions
 
+# This function extracts action phrases from a single description
+# @return list of action phrases
 def extract_action_phrases(description):
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(description)
@@ -44,12 +46,14 @@ def extract_action_phrases(description):
     
     return action_phrases
 
+# This function checks if a node is negated by one of its children
 def check_for_negation(node):
     for child in node.children:
         if(child.dep_ == 'neg'):
             return True
     return False
 
+# This function calculates the amount of matches between a list of stemmed action phrases and a set of matching rules
 def get_matches(stemmed_action_phrases, rules):
     res = 0
     if not rules:
@@ -60,6 +64,8 @@ def get_matches(stemmed_action_phrases, rules):
                 res += 1
     return res
 
+# This function returns all the action phrases for a specific VERB node
+# @return: all the action phrases for verb
 def get_verb_action_phrases(verb, ignore_tokens):
     action_phrases = []
 
@@ -69,6 +75,7 @@ def get_verb_action_phrases(verb, ignore_tokens):
     queue.append(verb)
     visited.add(verb)
 
+    # if a child VERB node has one of these dependency values, it should still be considered
     new_clause_dep = set(['conj', 'xcomp', 'advcl', 'ccomp', 'pcomp'])
     
     #Perform BFS
@@ -115,11 +122,14 @@ def get_verb_action_phrases(verb, ignore_tokens):
                 action_phrases.append(verb.text + ' ' + node.text)
             done = True
         
+        # check for prepositions
         elif(node.dep_ == 'prep'):
             for pot_obj in node.children:
                 if('obj' in pot_obj.dep_):
                     action_phrases.append(verb.text + ' ' + node.text + ' ' + pot_obj.text)
             done = True
+
+        # check for adverbial modifiers
         elif(node.dep_ == 'advmod'):
             action_phrases.append(verb.text + ' ' + node.text)
             done = True
@@ -133,7 +143,7 @@ def get_verb_action_phrases(verb, ignore_tokens):
 
     return action_phrases
 
-#returns list of stemmed action phrases
+# This function takes a list of action phrases and returns their stemmed forms
 def get_stemmed_action_phrases(action_phrases):
     stemmer = SnowballStemmer(language='english')
     res = []
@@ -148,11 +158,12 @@ def get_stemmed_action_phrases(action_phrases):
     return res 
 
 
-#return the functionality category that was inferred from the given set of action phrases
+# This function checks if the given set of action phrases can be matches to any of the specified functionality categories
+# @return: the inferred category aswell as the list of stemmed action phrases
 def get_functionality_category(action_phrases):
     stemmed_action_phrases = get_stemmed_action_phrases(action_phrases)
 
-    #Dictionary containing a matching pattern (list of dictionaries) for each category of functionality
+    #Dictionary containing a matching pattern (list of stemmed action phrases) for each category of functionality
     category_rules = {
         "kill processes" : ['optim devic perform', 'stop app', 'drain app', 'stop function', 'extend batteri life', 'estimate batteri life', 'block app', 'boost phone', 'speed phone', 'save power', 'batteri', 'save effect', 'stop background applic', 'stop drain app', 'prevent app', 'boost devic', 'get % perform', 'stop killer', 'close app', 'clear cach', 'decreas power usag', 'decreas % usag'],
         "obtain notifications": ['catch event', 'obtain notif', 'detect notif', 'receiv respons', 'receiv app switch', 'give notif access'],
@@ -168,10 +179,10 @@ def get_functionality_category(action_phrases):
         "auto sign in": ['copi websit address', 'detail rememb', 'sign into app', 'transmit inform', 'autofil', 'fill usernam', 'retriev app content', 'fill login', 'login feature', 'detect you prompt']
     }
 
-    res = 'uncategorized'
+    res = 'uncategorized'       
     max = 0
 
-    #find category with most matches
+    # Infer category by checking which one has the most matches
     for category, rules in category_rules.items():
         matches = get_matches(stemmed_action_phrases, rules)
         if(matches > max):

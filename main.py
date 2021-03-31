@@ -13,12 +13,12 @@ from termcolor import colored
 #set constants
 strings_xml_path = "./data/output/res/values/strings.xml"
 
-#create temporary data folder
+#create temporary data directory
 def setup():
     if not os.path.exists("data"):
         os.makedirs("data")
 
-#remove data folder and all contents
+#remove data directory and all contents
 def cleanup():
     """Clears the data directory"""
     subprocess.call(["rm", "-rf", "data"])
@@ -35,6 +35,7 @@ def print_descriptions(original_descriptions, en_descriptions):
         print(d)
         print("\n-------------------------------------------------------\n")
 
+# Sanitize descriptions, i.e. remove listing symbols which confuse spaCy (can be extended)
 def sanitize_desc(descriptions):
     res = []
     for desc in descriptions:
@@ -44,6 +45,8 @@ def sanitize_desc(descriptions):
         res.append(desc)
     return res
 
+# Helper function handling description and action phrase instruction
+# @return: list of action phrases of all the extracted descriptions
 def get_action_phrases(accessibility_config_file_list, desc):
     action_phrases = []  
 
@@ -68,12 +71,14 @@ def get_action_phrases(accessibility_config_file_list, desc):
     
     return action_phrases
 
+# This function provides basic apktool apk decoding functionality without removing the data directory after completion. Mainly intended for development...
 def decode_apk(apk_path):
     """This command only decodes a specified apk using apktool, without performing any further analysis"""
     setup()
     out = dec.decode(apk_path)
     print(out)
 
+# This function can be considered the main function of the scanner. It connects all the phases and prints outputs to the command line
 def analyze_apk(apk_path, print_desc:bool=False, print_events:bool=False):
     """Performs analysis of the specified file as long as it is compatible with apktool input formats"""
     setup()
